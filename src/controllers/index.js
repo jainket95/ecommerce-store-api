@@ -1,4 +1,4 @@
-const { getDummyProducts, deepCopy } = require("../utils");
+const { getDummyProducts, resetCart } = require("../utils");
 
 let orders = [];
 
@@ -9,7 +9,7 @@ let initialCart = {
 	totalDiscount: 0,
 	total: 0,
 };
-let cart = initialCart;
+let cart = resetCart(initialCart);
 let products = [];
 
 let discounts = [];
@@ -62,22 +62,10 @@ module.exports = {
 	},
 	cartCheckout: function (req, res) {
 		try {
-			let { id, discountCode } = req.body;
-			let nextOrderIndex = orders.length + 1;
+			let { id } = req.body;
 
-			let discount = discounts.find(
-				(discount) =>
-					discount.index === nextOrderIndex && discount.code === discountCode
-			);
-
-			if (discount && discount.code) {
-				cart.totalDiscount = (cart.totalPrice * discount.value) / 100;
-				cart.total = cart.totalPrice - cart.totalDiscount;
-			}
-
-			orders.push({ id, ...cart, discount });
-			cart = null;
-			cart = deepCopy(initialCart);
+			orders.push({ id, ...cart });
+			cart = { ...resetCart(initialCart) };
 
 			return res.json({ data: orders, isSuccess: true });
 		} catch (error) {
@@ -89,7 +77,7 @@ module.exports = {
 		try {
 			let { discount } = req.body;
 			discounts.push(discount);
-			return res.json({ data: discount, isSuccess: true });
+			return res.json({ data: discounts, isSuccess: true });
 		} catch (error) {
 			console.error(error);
 			return res.sendStatus(400);
@@ -101,13 +89,17 @@ module.exports = {
 
 			let nextOrderIndex = orders.length + 1;
 
-			let discount =
-				discounts.findIndex(
-					(discount) =>
-						discount.index === nextOrderIndex && discount.code === discountCode
-				) >= 0;
+			let discount = discounts.find(
+				(discount) =>
+					discount.index === nextOrderIndex && discount.code === discountCode
+			);
 
-			if (discount) {
+			if (discount && discount.id && discount.code) {
+				cart.totalDiscount = (cart.totalPrice * discount.value) / 100;
+				cart.total = cart.totalPrice - cart.totalDiscount;
+
+				cart = { ...cart, discount };
+
 				return res.json({ isSuccess: true, message: "discount code applied" });
 			} else {
 				return res.json({
@@ -122,19 +114,39 @@ module.exports = {
 	},
 	getAdminStoreDetails: function (req, res) {
 		try {
-			const adminOrderDetails = orders.reduce((total, order) => {
-				total.itemsQuantity += order.totalQuantity;
-				total.purchaseAmount += order.totalPrice;
-				total.discountAmount += order.totalDiscount;
-				if (!total.discount) {
-					total.discount = [];
-				} else {
-					total.discount.push(order.discount);
-				}
+			const adminOrderDetails = orders.reduce(
+				(total, order) => {
+					total.itemsQuantity += order.totalQuantity;
+					total.purchaseAmount += order.totalPrice;
+					total.discountAmount += order.totalDiscount;
+					if (order.discount) total.discounts.push(order.discount);
 
-				return total;
-			}, {});
-			res.json({ isSuccess: true, adminOrderDetails });
+					return total;
+				},
+				{
+					itemsQuantity: 0,
+					purchaseAmount: 0,
+					discountAmount: 0,
+					discounts: [],
+				}
+			);
+			if (
+				!(
+					adminOrderDetails.itemsQuantity ||
+					adminOrderDetails.discountAmount ||
+					adminOrderDetails.discount
+				)
+			) {
+				res.json({
+					isSuccess: true,
+					data: { data: adminOrderDetails, isDataAvailable: false },
+				});
+			} else {
+				res.json({
+					isSuccess: true,
+					data: { data: adminOrderDetails, isDataAvailable: true },
+				});
+			}
 		} catch (error) {
 			console.error(error);
 			return res.sendStatus(400);

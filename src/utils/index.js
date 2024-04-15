@@ -17,7 +17,12 @@ const deepCopy = (obj) => {
 	return JSON.parse(JSON.stringify(Object.assign({}, obj)));
 };
 
+const resetCart = (cartObj) => {
+	return deepCopy(cartObj);
+};
+
 module.exports = {
 	getDummyProducts,
 	deepCopy,
+   resetCart
 };
