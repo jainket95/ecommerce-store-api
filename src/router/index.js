@@ -5,6 +5,7 @@ const {
 	generateDiscount,
 	getCart,
 	validateDiscount,
+	getAdminStoreDetails,
 } = require("../controllers");
 const express = require("express");
 
@@ -16,5 +17,6 @@ router.post("/addProductToCart", addProductToCart);
 router.post("/cartCheckout", cartCheckout);
 router.post("/generateDiscount", generateDiscount);
 router.post("/validateDiscount", validateDiscount);
+router.get("/getAdminStoreDetails", getAdminStoreDetails);
 
 module.exports = router;

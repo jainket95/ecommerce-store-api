@@ -21,7 +21,7 @@ getDummyProducts().then((data) => {
 module.exports = {
 	getProducts: function (req, res) {
 		try {
-			return res.json(products);
+			return res.json({ data: products, isSuccess: true });
 		} catch (error) {
 			console.error(error);
 			return res.sendStatus(400);
@@ -29,7 +29,15 @@ module.exports = {
 	},
 	getCart: function (req, res) {
 		try {
-			return res.json(cart);
+			return res.json({ data: cart, isSuccess: true });
+		} catch (error) {
+			console.error(error);
+			return res.sendStatus(400);
+		}
+	},
+	getDiscounts: function (req, res) {
+		try {
+			return res.json({ data: discounts, isSuccess: true });
 		} catch (error) {
 			console.error(error);
 			return res.sendStatus(400);
@@ -112,7 +120,7 @@ module.exports = {
 			return res.sendStatus(400);
 		}
 	},
-	getAdminCartDetails: function (req, res) {
+	getAdminStoreDetails: function (req, res) {
 		try {
 			const adminOrderDetails = orders.reduce((total, order) => {
 				total.itemsQuantity += order.totalQuantity;
