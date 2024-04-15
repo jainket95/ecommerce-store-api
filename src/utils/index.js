@@ -13,6 +13,11 @@ const getDummyProducts = async () => {
 	return products;
 };
 
+const deepCopy = (obj) => {
+	return JSON.parse(JSON.stringify(Object.assign({}, obj)));
+};
+
 module.exports = {
 	getDummyProducts,
+	deepCopy,
 };
